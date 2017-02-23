@@ -65,7 +65,7 @@ func handle(conn *net.Conn, id int, stop chan int) {
 			stop <- id
 		}()
 		defer func() {
-			// close file writers
+			// TODO: close file writers
 		}()
 
 		log.Printf("Starting handler for %v\n", (*conn).RemoteAddr().String())
