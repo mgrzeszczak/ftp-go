@@ -33,7 +33,18 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 	var frameCount uint32
 
 	filedata = unpack(firstFrame.content)
-	openedFile, err := os.Create(filedata.filename)
+
+	fname := filedata.filename
+	i := 0
+	for {
+		if _, err := os.Stat(fname); err == nil {
+			fname = fmt.Sprintf("%s%v", filedata.filename, i)
+		} else {
+			break
+		}
+	}
+
+	openedFile, err := os.Create(fname)
 	if err != nil {
 		// TODO: handle gracefully
 		panic(fmt.Sprintf("Failed to open file %s\n", filedata.filename))
@@ -46,6 +57,8 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 	}()
 
 	log.Printf("Began receiving file %v\n", filedata.filename)
+
+	progress := 0
 
 	for {
 		f := <-fc
@@ -61,7 +74,11 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 			wrote += uint32(n)
 		}
 
-		log.Printf("Receiving %v: %v%%\n", filedata.filename, 100*float32(frameCount)/float32(filedata.frames))
+		p := 100 * float32(frameCount) / float32(filedata.frames)
+		if p-progress > 1 {
+			log.Printf("Receiving %v: %v%%\n", filedata.filename, p)
+			progress = p
+		}
 
 		if frameCount == filedata.frames {
 			return
