@@ -111,15 +111,6 @@ func send(files []string, host string, signals chan os.Signal) {
 		defer close(stop)
 	}
 
-	for k, v := range m {
-		result := <-v
-		if result {
-			log.Printf("Sent file %s\n", k)
-		} else {
-			log.Printf("Failed to send file %s\n", k)
-		}
-	}
-
 	cases := make([]reflect.SelectCase, len(channels)+1)
 	for i, ch := range channels {
 		cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
@@ -128,11 +119,14 @@ func send(files []string, host string, signals chan os.Signal) {
 
 	remaining := len(files)
 	for remaining > 0 {
+
 		chosen, value, ok := reflect.Select(cases)
 		if !ok {
 			// The chosen channel has been closed, so zero out the channel to disable the case
 			cases[chosen].Chan = reflect.ValueOf(nil)
-			remaining -= 1
+			if chosen < len(files) {
+				remaining -= 1
+			}
 			continue
 		}
 
@@ -140,13 +134,14 @@ func send(files []string, host string, signals chan os.Signal) {
 			for _, v := range stopChannels {
 				v <- true
 			}
-			//panic("Ctrl-C")
 		} else {
 			if value.Bool() {
 				log.Printf("Sent %s\n", files[chosen])
 			} else {
 				log.Printf("Failed to send %s\n", files[chosen])
+				remaining -= 1
 			}
 		}
+
 	}
 }

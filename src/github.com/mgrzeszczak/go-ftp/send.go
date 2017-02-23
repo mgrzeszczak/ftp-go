@@ -52,7 +52,8 @@ func sendFile(filename string, conn *net.Conn, done chan<- bool, stop <-chan boo
 		for wrote < l {
 			n, err := (*conn).Write(bytes[wrote:])
 			if err != nil {
-				panic(err.Error())
+				done <- false
+				return
 			}
 			wrote += n
 		}
@@ -101,7 +102,9 @@ func sendFile(filename string, conn *net.Conn, done chan<- bool, stop <-chan boo
 			send(packFrame(&chunkFrame))
 
 			chunkCounter++
+
 			log.Printf("Sending %v: %v%%\n", filename, 100*float32(chunkCounter)/float32(frameCount))
+
 			//log.Println("Sent")
 		}
 
