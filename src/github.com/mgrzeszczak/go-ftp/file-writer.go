@@ -35,22 +35,27 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 	filedata = unpack(firstFrame.content)
 	openedFile, err := os.Create(filedata.filename)
 	if err != nil {
+		// TODO: handle gracefully
 		panic(fmt.Sprintf("Failed to open file %s\n", filedata.filename))
 	}
 
 	file = openedFile
 	defer func() {
+		log.Printf("File received %v\n", filedata.filename)
 		file.Close()
 	}()
+
+	log.Printf("Began receiving file %v\n", filedata.filename)
 
 	for {
 		f := <-fc
 		frameCount++
-		log.Printf("Received frame %v. Content:\n\n%v\n\n", frameCount, f.content)
+		//log.Printf("Received frame %v. Content:\n\n%v\n\n", frameCount, f.content)
 		var wrote uint32
 		for wrote < f.len {
 			n, err := file.Write(f.content[wrote:])
 			if err != nil {
+				// TODO: handle gracefully
 				panic(fmt.Sprintf("Failed to write to file %s\n", filedata.filename))
 			}
 			wrote += uint32(n)

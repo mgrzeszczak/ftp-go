@@ -32,30 +32,30 @@ func handle(conn *net.Conn, id int, stop chan int) {
 	frameMap := make(map[uint32]chan *frame)
 
 	readFrame := func() (*frame, error) {
-		log.Println("Reading frame")
+		//log.Println("Reading frame")
 		f := frame{}
 		err := binary.Read(*conn, binary.BigEndian, &f.ctype)
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Read type %v\n", f.ctype)
+		//log.Printf("Read type %v\n", f.ctype)
 		err = binary.Read(*conn, binary.BigEndian, &f.len)
 		if err != nil {
 			return nil, err
 		}
-		log.Println("Read len")
+		//log.Println("Read len")
 		err = binary.Read(*conn, binary.BigEndian, &f.id)
 		if err != nil {
 			return nil, err
 		}
-		log.Println("Read id")
+		//log.Println("Read id")
 		f.content = make([]byte, f.len)
 		err = binary.Read(*conn, binary.BigEndian, f.content)
 		if err != nil {
 			return nil, err
 		}
-		log.Println("Read content")
-		log.Printf("Read frame of type %v\n", f.ctype)
+		//log.Println("Read content")
+		//log.Printf("Read frame of type %v\n", f.ctype)
 		return &f, nil
 	}
 
