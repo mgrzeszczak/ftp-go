@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func sendFile(filename string, conn *net.Conn, done chan<- bool, stop <-chan bool) {
+func sendFile(filename string, id uint32, conn *net.Conn, done chan<- bool, stop <-chan bool) {
 	var bufferSize int64 = 1024
 	f, err := os.Open(filename)
 	if err != nil {
@@ -42,7 +42,7 @@ func sendFile(filename string, conn *net.Conn, done chan<- bool, stop <-chan boo
 	headerFrame := frame{
 		uint32(len(fdatabytes)),
 		type_header,
-		1,
+		id,
 		fdatabytes,
 	}
 
@@ -96,7 +96,7 @@ func sendFile(filename string, conn *net.Conn, done chan<- bool, stop <-chan boo
 			chunkFrame := frame{
 				uint32(len(chunk)),
 				type_frame,
-				1,
+				id,
 				chunk,
 			}
 			send(packFrame(&chunkFrame))

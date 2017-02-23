@@ -105,7 +105,7 @@ func send(files []string, host string, signals chan os.Signal) {
 		done := make(chan bool)
 		stop := make(chan bool)
 		m[filename] = done
-		go sendFile(filename, &conn, done, stop)
+		go sendFile(filename, uint32(i), &conn, done, stop)
 		channels[i] = done
 		stopChannels[i] = stop
 		defer close(stop)
