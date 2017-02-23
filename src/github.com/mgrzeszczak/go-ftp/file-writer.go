@@ -58,7 +58,7 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 
 	log.Printf("Began receiving file %v\n", filedata.filename)
 
-	progress := 0
+	var progress float32
 
 	for {
 		f := <-fc
@@ -74,7 +74,7 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 			wrote += uint32(n)
 		}
 
-		p := 100 * float32(frameCount) / float32(filedata.frames)
+		var p float32 = 100 * float32(frameCount) / float32(filedata.frames)
 		if p-progress > 1 {
 			log.Printf("Receiving %v: %v%%\n", filedata.filename, p)
 			progress = p

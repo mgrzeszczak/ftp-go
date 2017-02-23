@@ -77,7 +77,7 @@ func sendFile(filename string, id uint32, conn *net.Conn, done chan<- bool, stop
 	send(packFrame(&headerFrame))
 
 	chunkCounter := 0
-	progress := 0
+	var progress float32
 
 
 	for {
@@ -105,7 +105,7 @@ func sendFile(filename string, id uint32, conn *net.Conn, done chan<- bool, stop
 
 			chunkCounter++
 
-			p := 100*float32(chunkCounter)/float32(frameCount)
+			var p float32 = 100*float32(chunkCounter)/float32(frameCount)
 			if p-progress>1{
 				log.Printf("Sending %v: %v%%\n", filename, p)
 				progress = p
