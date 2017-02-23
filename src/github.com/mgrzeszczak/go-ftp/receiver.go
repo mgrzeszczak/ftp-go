@@ -4,65 +4,84 @@ import (
 	"encoding/binary"
 	"log"
 	"net"
-	"time"
+)
+
+const (
+	type_header uint16 = 1
+	type_frame  uint16 = 2
 )
 
 type frame struct {
 	len     uint32
-	ctype   uint8
+	ctype   uint16
+	id      uint32
 	content []byte
 }
 
-func handle(conn net.Conn, stop chan bool) {
-	c := make(chan *message)
+func packFrame(f *frame) []byte {
+	len := 10 + len(f.content)
+	out := make([]byte, len)
+	binary.BigEndian.PutUint16(out[:2], f.ctype)
+	binary.BigEndian.PutUint32(out[2:6], f.len)
+	binary.BigEndian.PutUint32(out[6:10], f.id)
+	copy(out[10:], f.content)
+	return out
+}
+
+func handle(conn *net.Conn, id int, stop chan int) {
+	frameMap := make(map[uint32]chan *frame)
 
 	readFrame := func() (*frame, error) {
+		log.Println("Reading frame")
 		f := frame{}
-		conn.SetDeadline(time.Now().Add(time.Second))
-		err := binary.Read(conn, binary.BigEndian, &f.ctype)
+		err := binary.Read(*conn, binary.BigEndian, &f.ctype)
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("READ %v\n", f.ctype)
-		// timeout only for first read
-		conn.SetDeadline(time.Time{})
-		err = binary.Read(conn, binary.BigEndian, &f.len)
+		log.Printf("Read type %v\n", f.ctype)
+		err = binary.Read(*conn, binary.BigEndian, &f.len)
 		if err != nil {
 			return nil, err
 		}
-
+		log.Println("Read len")
+		err = binary.Read(*conn, binary.BigEndian, &f.id)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("Read id")
 		f.content = make([]byte, f.len)
-		binary.Read(conn, binary.BigEndian, f.content)
+		err = binary.Read(*conn, binary.BigEndian, f.content)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("Read content")
+		log.Printf("Read frame of type %v\n", f.ctype)
 		return &f, nil
 	}
 
 	go func() {
 		defer func() {
-			log.Printf("Closing connection %v\n", conn.RemoteAddr().String())
-			stop <- true
+			log.Printf("Closing connection %v\n", (*conn).RemoteAddr().String())
+			stop <- id
 		}()
-		defer close(c)
-		log.Printf("Starting handler for %v\n", conn.RemoteAddr().String())
-		for {
-			select {
-			case <-stop:
-				log.Printf("Stopping handler for %v\n", conn.RemoteAddr().String())
-				return
-			default:
-				f, e := readFrame()
-				if e != nil {
-					err, ok := e.(net.Error)
-					if ok && err.Timeout() {
-						//log.Printf("Timeout from %v\n", conn.RemoteAddr().String())
-						continue
-					} else if e != nil {
-						log.Printf("Error reading from %v - %v", conn.RemoteAddr().String(), e.Error())
-						return
-					}
-				}
-				log.Printf("Received frame: %v\n", *f)
-			}
+		defer func() {
+			// close file writers
+		}()
 
+		log.Printf("Starting handler for %v\n", (*conn).RemoteAddr().String())
+		for {
+			f, e := readFrame()
+			if e != nil {
+				log.Printf("Error reading from %v - %v", (*conn).RemoteAddr().String(), e.Error())
+				return
+			}
+			switch f.ctype {
+			case type_header:
+				frameMap[f.id] = make(chan *frame, 10)
+				go startFileWriter(frameMap[f.id], f)
+			case type_frame:
+				frameMap[f.id] <- f
+			}
 		}
 	}()
 }
