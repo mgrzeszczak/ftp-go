@@ -6,21 +6,24 @@ import (
 	"os"
 )
 
-func sendFile(filename string, conn *net.Conn, done chan<- bool) {
+func sendFile(filename string, conn *net.Conn, done chan<- bool, stop <-chan bool) {
 	var bufferSize int64 = 1024
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Println(err.Error())
 		done <- false
+		return
 	}
 	defer func() {
 		f.Close()
+		close(done)
 	}()
 
 	fi, err := f.Stat()
 	if err != nil {
 		log.Println(err.Error())
 		done <- false
+		return
 	}
 
 	var frameCount uint32
@@ -72,23 +75,36 @@ func sendFile(filename string, conn *net.Conn, done chan<- bool) {
 	//log.Printf("%v\n", packFrame(&headerFrame))
 	send(packFrame(&headerFrame))
 
+	chunkCounter := 0
+
 	for {
-		chunk := readChunk()
-		//log.Printf("Read chunk: \n\n %v \n\nSending...", chunk)
-		if len(chunk) == 0 {
-			log.Printf("Sent file %v\n", filename)
-			done <- true
+
+		select {
+		case <-stop:
+			done <- false
 			return
+		default:
+			chunk := readChunk()
+			//log.Printf("Read chunk: \n\n %v \n\nSending...", chunk)
+			if len(chunk) == 0 {
+				//log.Printf("Sent file %v\n", filename)
+				done <- true
+				return
+			}
+
+			chunkFrame := frame{
+				uint32(len(chunk)),
+				type_frame,
+				1,
+				chunk,
+			}
+			send(packFrame(&chunkFrame))
+
+			chunkCounter++
+			log.Printf("Sending %v: %v%%\n", filename, 100*float32(chunkCounter)/float32(frameCount))
+			//log.Println("Sent")
 		}
 
-		chunkFrame := frame{
-			uint32(len(chunk)),
-			type_frame,
-			1,
-			chunk,
-		}
-		send(packFrame(&chunkFrame))
-		//log.Println("Sent")
 	}
 
 }

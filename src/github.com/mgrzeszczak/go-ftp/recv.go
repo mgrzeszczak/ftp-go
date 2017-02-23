@@ -77,7 +77,7 @@ func handle(conn *net.Conn, id int, stop chan int) {
 			}
 			switch f.ctype {
 			case type_header:
-				frameMap[f.id] = make(chan *frame, 10)
+				frameMap[f.id] = make(chan *frame, 100)
 				go startFileWriter(frameMap[f.id], f)
 			case type_frame:
 				frameMap[f.id] <- f

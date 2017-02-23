@@ -60,6 +60,9 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 			}
 			wrote += uint32(n)
 		}
+
+		log.Printf("Receiving %v: %v%%\n", filedata.filename, 100*float32(frameCount)/float32(filedata.frames))
+
 		if frameCount == filedata.frames {
 			return
 		}
