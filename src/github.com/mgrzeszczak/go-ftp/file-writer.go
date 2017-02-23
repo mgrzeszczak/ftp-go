@@ -38,6 +38,7 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 	i := 0
 	for {
 		if _, err := os.Stat(fname); err == nil {
+			i++
 			fname = fmt.Sprintf("%s%v", filedata.filename, i)
 		} else {
 			break
