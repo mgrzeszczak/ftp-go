@@ -4,7 +4,7 @@ File transfer program written in Go language.
 # Installation
 To compile:
 ```
-go install
+./make
 ```
 Or just use precompiled binaries.
 
