@@ -1,6 +1,13 @@
 # ftp-go
 File transfer program written in Go language.
 
+# Installation
+To compile:
+```
+go install
+```
+Or just use precompiled binaries.
+
 # Usage
   ```
   ./go-ftp recv
