@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-var filename_regexp *regexp.Regexp = regexp.MustCompile("[^A-Za-z0-9 ]")
+var filename_regexp *regexp.Regexp = regexp.MustCompile("(../)+")
 
 type fdata struct {
 	frames   uint32
