@@ -6,11 +6,12 @@ To compile:
 ```
 ./make
 ```
-Or just use precompiled binaries.
+This will create the binary inside the **bin/** folder.
+Or just use precompiled binaries from **bin/** folder.
 
 # Usage
   ```
-  ./go-ftp recv
+  ./go-ftp recv port
   ./go-ftp send ip:port file1 file2 ...
   ```
 
