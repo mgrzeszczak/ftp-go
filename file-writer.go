@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 )
+
+var filename_regexp *regexp.Regexp = regexp.MustCompile("[^A-Za-z0-9 ]")
 
 type fdata struct {
 	frames   uint32
@@ -35,6 +38,8 @@ func startFileWriter(fc <-chan *frame, firstFrame *frame) {
 	filedata = unpack(firstFrame.content)
 
 	fname := filedata.filename
+	fname = filename_regexp.ReplaceAllString(fname, "")
+
 	i := 0
 	for {
 		if _, err := os.Stat(fname); err == nil {

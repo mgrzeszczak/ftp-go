@@ -10,11 +10,9 @@ import (
 )
 
 const (
-	port       = "2143"
-	local_addr = ":" + port
-	conn_type  = "tcp"
-	arg_send   = "send"
-	arg_recv   = "recv"
+	conn_type = "tcp"
+	arg_send  = "send"
+	arg_recv  = "recv"
 )
 
 func main() {
@@ -27,8 +25,12 @@ func main() {
 	}
 	switch os.Args[1] {
 	case arg_recv:
+		if len(os.Args) < 3 {
+			usage()
+			return
+		}
 		log.Println("Receiving files...")
-		err := recv(local_addr, signals)
+		err := recv(os.Args[2], signals)
 		if err != nil {
 			panic(err)
 		}
@@ -38,18 +40,18 @@ func main() {
 			return
 		}
 		log.Printf("Sending files %v to %v\n", os.Args[3:], os.Args[2])
-		send(os.Args[3:], fmt.Sprintf("%s:%v", os.Args[2], port), signals)
+		send(os.Args[3:], os.Args[2], signals)
 	default:
 		usage()
 	}
 }
 
 func usage() {
-	fmt.Printf("%s [recv | send] (send?) -> [host(e.g. 192.168.0.2) file1 file2...]\n", os.Args[0])
+	fmt.Printf("%s [recv | send] (send?) -> [host(e.g. 192.168.0.2):port file1 file2...] (recv?) [port]\n", os.Args[0])
 }
 
-func recv(addr string, signals chan os.Signal) error {
-	listener, err := net.Listen(conn_type, addr)
+func recv(port string, signals chan os.Signal) error {
+	listener, err := net.Listen(conn_type, fmt.Sprintf(":%s", port))
 
 	if err != nil {
 		return err

@@ -1,9 +1,14 @@
 #!/bin/bash
 export GOPATH=`pwd`
-cd src/github.com/mgrzeszczak/go-ftp
 echo "Formatting source files..."
 go fmt
 echo "Running tests..."
 go test
 echo "Compiling..."
-go install
+go build
+
+if [ ! -d bin ]; then
+      mkdir -p bin;
+fi
+
+mv ftp-go bin/
