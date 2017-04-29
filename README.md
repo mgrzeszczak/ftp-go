@@ -1,4 +1,6 @@
 # ftp-go
+[![Build Status](https://travis-ci.org/mgrzeszczak/ftp-go.png)](https://travis-ci.org/mgrzeszczak/ftp-go)
+
 File transfer program written in Go language.
 
 # Installation
